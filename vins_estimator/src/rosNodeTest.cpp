@@ -21,7 +21,7 @@
 #include "estimator/parameters.h"
 #include "utility/visualization.h"
 
-Estimator estimator;
+Estimator estimator; // "init begins"
 
 queue<sensor_msgs::ImuConstPtr> imu_buf;
 queue<sensor_msgs::PointCloudConstPtr> feature_buf;
@@ -45,26 +45,28 @@ void img1_callback(const sensor_msgs::ImageConstPtr &img_msg)
 }
 
 
+// to convert a ROS image message (sensor_msgs::ImageConstPtr) into an OpenCV image (cv::Mat)
 cv::Mat getImageFromMsg(const sensor_msgs::ImageConstPtr &img_msg)
 {
     cv_bridge::CvImageConstPtr ptr;
-    if (img_msg->encoding == "8UC1")
+    if (img_msg->encoding == "8UC1") // which is essentially the same as "mono8".
     {
+        // to handle a specific case in which the incoming image message is already in an 8-bit
         sensor_msgs::Image img;
         img.header = img_msg->header;
         img.height = img_msg->height;
         img.width = img_msg->width;
-        img.is_bigendian = img_msg->is_bigendian;
-        img.step = img_msg->step;
+        img.is_bigendian = img_msg->is_bigendian; // big-endian (0) or little-endian (1)
+        img.step = img_msg->step; // row length in bytes = width * bytes_per_pixel; bytes_per_pixel = (bits_per_pixel / 8) = 1
         img.data = img_msg->data;
-        img.encoding = "mono8";
+        img.encoding = "mono8"; // enconding could be "mono8", "bgr8", "rgb8", "32FC1", "16UC1", "8UC1", "8UC3", "bayer_rggb8", "bayer_bggr8", "bayer_gbrg8", "bayer_grbg8", etc.
         ptr = cv_bridge::toCvCopy(img, sensor_msgs::image_encodings::MONO8);
     }
     else
         ptr = cv_bridge::toCvCopy(img_msg, sensor_msgs::image_encodings::MONO8);
 
     cv::Mat img = ptr->image.clone();
-    return img;
+    return img; // a single-channel, 8-bit grayscale image
 }
 
 // extract images with same timestamp from two topics
@@ -83,6 +85,7 @@ void sync_process()
                 double time0 = img0_buf.front()->header.stamp.toSec();
                 double time1 = img1_buf.front()->header.stamp.toSec();
                 // 0.003s sync tolerance
+                // throw the old and slow one
                 if(time0 < time1 - 0.003)
                 {
                     img0_buf.pop();
@@ -93,7 +96,7 @@ void sync_process()
                     img1_buf.pop();
                     printf("throw img1\n");
                 }
-                else
+                else // abs(time0 - time1) <= 0.003
                 {
                     time = img0_buf.front()->header.stamp.toSec();
                     header = img0_buf.front()->header;

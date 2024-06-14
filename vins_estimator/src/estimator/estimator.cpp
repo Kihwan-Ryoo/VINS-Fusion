@@ -160,7 +160,7 @@ void Estimator::changeSensorType(int use_imu, int use_stereo)
 void Estimator::inputImage(double t, const cv::Mat &_img, const cv::Mat &_img1)
 {
     inputImageCnt++;
-    map<int, vector<pair<int, Eigen::Matrix<double, 7, 1>>>> featureFrame;
+    map<int, vector<pair<int, Eigen::Matrix<double, 7, 1>>>> featureFrame; // featureFrame[feature_id] = <camera_id, <x, y, z(1), p_u, p_v, v_x, v_y>>
     TicToc featureTrackerTime;
 
     if(_img1.empty())
