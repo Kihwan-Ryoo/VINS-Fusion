@@ -447,13 +447,15 @@ void Estimator::processIMU(double t, double dt, const Vector3d &linear_accelerat
 
     if (!pre_integrations[frame_count])
     {
+        // printf("FRAME COUNT %d\n", frame_count); 1 per FRAME COUNT
         pre_integrations[frame_count] = new IntegrationBase{acc_0, gyr_0, Bas[frame_count], Bgs[frame_count]};
     }
     if (frame_count != 0)
     {
+        // printf("frame count %d\n", frame_count); // 20 per frame_count
         pre_integrations[frame_count]->push_back(dt, linear_acceleration, angular_velocity);
         //if(solver_flag != NON_LINEAR)
-            tmp_pre_integration->push_back(dt, linear_acceleration, angular_velocity);
+            tmp_pre_integration->push_back(dt, linear_acceleration, angular_velocity); // maybe useless
 
         dt_buf[frame_count].push_back(dt);
         linear_acceleration_buf[frame_count].push_back(linear_acceleration);
