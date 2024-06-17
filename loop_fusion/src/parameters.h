@@ -34,4 +34,4 @@ extern int COL;
 extern std::string VINS_RESULT_PATH;
 extern int DEBUG_IMAGE;
 
-
+const double FOCAL_LENGTH = 415.0;

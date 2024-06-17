@@ -162,6 +162,7 @@ void Estimator::inputImage(double t, const cv::Mat &_img, const cv::Mat &_img1)
     inputImageCnt++;
     map<int, vector<pair<int, Eigen::Matrix<double, 7, 1>>>> featureFrame; // featureFrame[feature_id] = <camera_id, <x, y, z(1), p_u, p_v, v_x, v_y>>
     TicToc featureTrackerTime;
+    // printf("input image with time %f \n", t);
 
     if(_img1.empty())
         featureFrame = featureTracker.trackImage(t, _img);
@@ -201,7 +202,7 @@ void Estimator::inputIMU(double t, const Vector3d &linearAcceleration, const Vec
     mBuf.lock();
     accBuf.push(make_pair(t, linearAcceleration));
     gyrBuf.push(make_pair(t, angularVelocity));
-    //printf("input imu with time %f \n", t);
+    // printf("input imu with time %f \n", t);
     mBuf.unlock();
 
     if (solver_flag == NON_LINEAR)
@@ -293,15 +294,71 @@ void Estimator::processMeasurements()
             }
             mBuf.lock();
             if(USE_IMU)
-                getIMUInterval(prevTime, curTime, accVector, gyrVector);
+                getIMUInterval(prevTime, curTime, accVector, gyrVector); // get imu data(accVector, gyrVector) in the time interval [prevTime, curTime]
 
             featureBuf.pop();
             mBuf.unlock();
 
             if(USE_IMU)
-            {
+            {   
+                // printf("cur time %f\n", curTime);
                 if(!initFirstPoseFlag)
                     initFirstIMUPose(accVector);
+                    // MULTIPLE_THREAD is 1
+                    // [ WARN] [1718610271.933170701]: waiting for image and imu...
+                    // input imu with time 1403638127.270097 
+                    // input imu with time 1403638127.275097 
+                    // input imu with time 1403638127.280097 
+                    // input imu with time 1403638127.285097 
+                    // input imu with time 1403638127.290097 
+                    // input imu with time 1403638127.295097 
+                    // input imu with time 1403638127.300097 
+                    // input imu with time 1403638127.305097 
+                    // input imu with time 1403638127.310097 
+                    // input imu with time 1403638127.315097 
+                    // input imu with time 1403638127.320097 
+                    // input imu with time 1403638127.325097 
+                    // input imu with time 1403638127.330097 
+                    // input imu with time 1403638127.335097 
+                    // input imu with time 1403638127.340097 
+                    // input imu with time 1403638127.345097 
+                    // input imu with time 1403638127.350097 
+                    // input imu with time 1403638127.355097 
+                    // input imu with time 1403638127.360097 
+                    // input imu with time 1403638127.365097 
+                    // throw img1
+                    // input image with time 1403638127.345097 
+                    // input imu with time 1403638127.370097 
+                    // input imu with time 1403638127.375097 
+                    // input imu with time 1403638127.380097 
+                    // input imu with time 1403638127.385097 
+                    // input imu with time 1403638127.390097 
+                    // input imu with time 1403638127.395097 
+                    // input imu with time 1403638127.400097 
+                    // input imu with time 1403638127.405097 
+                    // input imu with time 1403638127.410097 
+                    // input imu with time 1403638127.415097 
+                    // input image with time 1403638127.395097 
+                    // cur time 1403638127.395097
+                    // init first imu pose
+                    // acc size 26
+                    // averge acc 8.957369 -0.099324 -3.923603
+                    // init R0 
+                    //     0.401335    0.0231789     0.915638
+                    // -2.46519e-32     -0.99968    0.0253063
+                    //     0.915931   -0.0101563    -0.401206
+                    // input imu with time 1403638127.420097 
+                    // input imu with time 1403638127.425097 
+                    // input imu with time 1403638127.430097 
+                    // input imu with time 1403638127.435097 
+                    // input imu with time 1403638127.440097 
+                    // input imu with time 1403638127.445097 
+                    // input imu with time 1403638127.450097 
+                    // input imu with time 1403638127.455097 
+                    // input imu with time 1403638127.460097 
+                    // input imu with time 1403638127.465097 
+                    // input image with time 1403638127.445097
+                    
                 for(size_t i = 0; i < accVector.size(); i++)
                 {
                     double dt;
@@ -344,11 +401,12 @@ void Estimator::processMeasurements()
 
 void Estimator::initFirstIMUPose(vector<pair<double, Eigen::Vector3d>> &accVector)
 {
-    printf("init first imu pose\n");
+    printf("init first imu pose\n"); // before first(the second when multiple_thread) image0 comes in
     initFirstPoseFlag = true;
     //return;
     Eigen::Vector3d averAcc(0, 0, 0);
     int n = (int)accVector.size();
+    // printf("acc size %d\n", n);
     for(size_t i = 0; i < accVector.size(); i++)
     {
         averAcc = averAcc + accVector[i].second;
@@ -804,10 +862,10 @@ bool Estimator::relativePose(Matrix3d &relative_R, Vector3d &relative_T, int &l)
 
             }
             average_parallax = 1.0 * sum_parallax / int(corres.size());
-            if(average_parallax * 415 > 30 && m_estimator.solveRelativeRT(corres, relative_R, relative_T))
+            if(average_parallax * FOCAL_LENGTH > 30 && m_estimator.solveRelativeRT(corres, relative_R, relative_T))
             {
                 l = i;
-                ROS_DEBUG("average_parallax %f choose l %d and newest frame to triangulate the whole structure", average_parallax * 415, l);
+                ROS_DEBUG("average_parallax %f choose l %d and newest frame to triangulate the whole structure", average_parallax * FOCAL_LENGTH, l);
                 return true;
             }
         }

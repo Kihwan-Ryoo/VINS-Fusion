@@ -20,6 +20,7 @@ using namespace std;
 using namespace Eigen;
 
 #include <ros/console.h>
+#include "../estimator/parameters.h"
 
 class MotionEstimator
 {
