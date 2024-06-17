@@ -412,11 +412,17 @@ void Estimator::initFirstIMUPose(vector<pair<double, Eigen::Vector3d>> &accVecto
         averAcc = averAcc + accVector[i].second;
     }
     averAcc = averAcc / n;
-    printf("averge acc %f %f %f\n", averAcc.x(), averAcc.y(), averAcc.z());
-    Matrix3d R0 = Utility::g2R(averAcc);
-    double yaw = Utility::R2ypr(R0).x();
+    printf("averge acc %f %f %f\n", averAcc.x(), averAcc.y(), averAcc.z()); // averge acc 8.957369 -0.099324 -3.923603
+    Matrix3d R0 = Utility::g2R(averAcc); // Compute a rotation matrix to align the gravity vector (0, 0, 1) with the average acceleration vector. This process includes a yaw rotation.
+        // R0 typically aligns the IMU's Z-axis with the gravity vector (down direction)
+        // but, it might have an arbitrary yaw angle(rotation about the Z-axis) to align the X-axis with the gravity vector projection on the horizontal plane
+    // To accurately align with the NED (North-East-Down) coordinate system, an additional yaw correction is needed.
+    // The additional yaw correction ensures the IMU frame is accurately aligned with the NED coordinate system. This guarantees that the IMU's X-axis and Y-axis point towards the north and east directions, respectively, ensuring overall orientation alignment.
+    double yaw = Utility::R2ypr(R0).x(); // yaw is extracted
+        // Yaw represents the rotation about the vertical axis (Z-axis) in the world frame
+        // To align the IMU frame with the NED coordinate system, we need to neutralize the yaw rotation
     R0 = Utility::ypr2R(Eigen::Vector3d{-yaw, 0, 0}) * R0;
-    Rs[0] = R0;
+    Rs[0] = R0; // the IMU frame is now aligned with the NED coordinate system
     cout << "init R0 " << endl << Rs[0] << endl;
     //Vs[0] = Vector3d(5, 0, 0);
 }
