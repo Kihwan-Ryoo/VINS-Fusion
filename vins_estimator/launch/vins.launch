@@ -1,0 +1,6 @@
+<launch>
+	<arg name="config_file_1" default="$(find vins)/../config/realsense_d435i/realsense_stereo_imu_config.yaml" />
+	<group ns="">
+		<node name="vins_estimator" pkg="vins" type="vins_node" args="$(arg config_file_1) /tf:=/tf_dev_null" output="screen"/>
+	</group>
+</launch>
